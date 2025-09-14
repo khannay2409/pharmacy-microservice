@@ -1,0 +1,79 @@
+### Build output ###
+target/
+build/
+out/
+
+# Allow wrapper JAR (important for mvnw)
+!.mvn/wrapper/maven-wrapper.jar
+
+# Exclude nested target/build but keep src/target (your original rules)
+!**/src/main/**/target/
+!**/src/test/**/target/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### IntelliJ IDEA ###
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# IntelliJ cache files
+.idea/modules.xml
+.idea/jarRepositories.xml
+.idea/compiler.xml
+.idea/libraries/
+
+### Eclipse ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### VS Code ###
+.vscode/
+
+### OS Specific ###
+.DS_Store
+Thumbs.db
+
+### Logs ###
+*.log
+logs/
+
+### Environment / Config ###
+.env
+application-*.yml
+application-*.properties
+
+### MySQL (local docker/mysql runtime) ###
+mysql_data/
+*.sock
+*.cnf
+*.pid
+*.err
+*.frm
+*.ibd
+*.ib_logfile*
+*.myd
+*.myi
+
+### Kafka/Zookeeper (if you run locally with docker-compose) ###
+kafka-data/
+zookeeper-data/
+
+### Misc ###
+*.class
+*.jar
+*.war
+*.ear
