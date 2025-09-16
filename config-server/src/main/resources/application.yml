@@ -1,0 +1,13 @@
+server:
+  port: 8888   # default port for config server
+
+spring:
+  application:
+    name: config-server
+
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/khannay2409/pharmacy-configs   # your new repo
+          clone-on-start: true
