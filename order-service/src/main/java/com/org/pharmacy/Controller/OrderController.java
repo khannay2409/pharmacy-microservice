@@ -5,12 +5,14 @@ import com.org.pharmacy.Events.OrderItemDTO;
 import com.org.pharmacy.Service.OrderService;
 import com.org.pharmacy.Entity.Order;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@Slf4j
 @RestController @RequestMapping("/orders")
 public class OrderController {
 
@@ -19,6 +21,7 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<?> createOrder(@RequestBody CreateOrderRequest req) {
+        log.info("Received Order Request");
         Order order = orderService.placeOrder(req.getUserId(), req.getItems());
         return ResponseEntity.ok(new CreateOrderResponse(order.getId(), order.getStatus(), order.getTotalAmount()));
     }
