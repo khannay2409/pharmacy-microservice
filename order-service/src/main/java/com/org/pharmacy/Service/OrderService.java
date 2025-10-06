@@ -8,6 +8,8 @@ import com.org.pharmacy.Entity.OrderItem;
 import com.org.pharmacy.Gateways.InventoryClient;
 import com.org.pharmacy.Repository.OrderRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -39,23 +41,27 @@ public class OrderService {
     public Order placeOrder(Long userId, List<OrderItemDTO> itemsDto) {
 
         StockAvailableResponse response = checkStock(itemsDto);
-
+        log.info("stock availability check:{}",response.isInStock());
         return createOrder(userId,itemsDto,response);
     }
 
     private Order createOrder(Long userId, List<OrderItemDTO> itemsDto, StockAvailableResponse response)
     {
+        log.info("creating Order for userID:{}", userId);
         Order order = buildBaseOrder(userId, response.isInStock());
 
-        List<OrderItem> orderItems = buildOrderItems(order, itemsDto, response);
-        order.setItems(orderItems);
+        if(order.getStatus()==OrderStatus.PLACED){
+            List<OrderItem> orderItems = buildOrderItems(order, itemsDto, response);
+            order.setItems(orderItems);
 
-        BigDecimal totalAmount = calculateTotalAmount(itemsDto, response);
-        order.setTotalAmount(totalAmount);
+            BigDecimal totalAmount = calculateTotalAmount(itemsDto, response);
+            order.setTotalAmount(totalAmount);
+        }
 
         orderRepository.save(order);
 
         if (response.isInStock()) {
+            log.info("publishing Order Placed Event");
             publishOrderEvent(order, response);
         }
 
@@ -93,7 +99,12 @@ public class OrderService {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                kafkaTemplate.send("orders.events", event);
+                String traceId = MDC.get("traceId"); // Get the traceId from MDC
+
+                ProducerRecord<String, Object> record = new ProducerRecord<>("orders.events", event);
+                record.headers().add("X-Trace-Id", traceId.getBytes());
+
+                kafkaTemplate.send(record);
             }
         });
     }

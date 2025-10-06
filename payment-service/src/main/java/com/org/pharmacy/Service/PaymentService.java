@@ -5,6 +5,9 @@ import com.org.pharmacy.Enum.PaymentStatus;
 import com.org.pharmacy.Events.OrderPlacedEvent;
 import com.org.pharmacy.Events.PaymentEvent;
 import com.org.pharmacy.Repository.PaymentRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
@@ -15,6 +18,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import java.time.Instant;
 import java.util.Random;
 
+@Slf4j
 @Component
 public class PaymentService {
 
@@ -41,14 +45,19 @@ public class PaymentService {
 
         // publish PaymentEvent
         PaymentEvent pe = new PaymentEvent(event.getOrderId(),  p.getId(), event.getMedicinePriceDTOList(), p.getStatus(), p.getAmount(), Instant.now());
-
+        log.info("publishing payment event:{}",pe);
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
+                String traceId = MDC.get("traceId");
                 if(pe.getStatus().equals(PaymentStatus.SUCCESS)) {
-                    kafkaTemplate.send("payments.success", pe);
+                    ProducerRecord<String, Object> record = new ProducerRecord<>("payments.success", pe);
+                    record.headers().add("X-Trace-Id", traceId.getBytes());
+                    kafkaTemplate.send(record);
                 } else {
-                    kafkaTemplate.send("payments.failed", pe);
+                    ProducerRecord<String, Object> record = new ProducerRecord<>("payments.failed", pe);
+                    record.headers().add("X-Trace-Id", traceId.getBytes());
+                    kafkaTemplate.send(record);
                 }
             }
         });

@@ -2,6 +2,7 @@ package com.org.pharmacy.Gateways;
 
 import com.org.pharmacy.Events.StockAvailableRequest;
 import com.org.pharmacy.Events.StockAvailableResponse;
+import org.slf4j.MDC;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
@@ -17,7 +18,7 @@ public class InventoryClient {
     private final WebClient webClient;
 
     public InventoryClient(WebClient.Builder builder) {
-        this.webClient = builder.baseUrl("http://inventory-service").build();
+        this.webClient = builder.baseUrl("http://localhost:8083").build();
     }
 
     @Retryable(
@@ -28,6 +29,7 @@ public class InventoryClient {
     public StockAvailableResponse checkStock(StockAvailableRequest request) {
         return (webClient.post()
                 .uri("/inventory/checkStock")
+                .header("X-Trace-Id", MDC.get("traceId"))
                 .bodyValue(request)
                 .retrieve()
                 .bodyToMono(StockAvailableResponse.class)

@@ -28,7 +28,8 @@ public class InventoryService {
 
     public void updateStock(Long orderId, List<MedicinePriceDTO> items) {
         for (MedicinePriceDTO item : items) {
-            Medicine medicine = medicineRepository.getReferenceById(item.getId());
+            log.debug("updating stock for medicine:{}",item.getName());
+            Medicine medicine = medicineRepository.getMedicineDetails(item.getName());
 
             int updatedStock = medicine.getStockQuantity() - item.getQuantity();
             medicine.setStockQuantity(updatedStock);
@@ -68,9 +69,5 @@ public class InventoryService {
                 });
 
         return new StockAvailableResponse(allInStock, details);
-    }
-
-    private Medicine findMedicine(String medicineName) {
-        return medicineRepository.getMedicineDetails(medicineName);
     }
 }
